@@ -1,0 +1,1 @@
+DATABASE_URL="mongodb+srv://sunilghanchi24:eNF5HNCKj0Pz5xw1@job-portol.9zycyg2.mongodb.net/job_board?retryWrites=true&w=majority&appName=job-portol" 
