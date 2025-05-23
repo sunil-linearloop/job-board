@@ -5,6 +5,7 @@ import { useSession } from 'next-auth/react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { use } from 'react';
+import { handleError } from '@/utils/error';
 
 interface Job {
   id: string;
@@ -39,7 +40,7 @@ export default function JobDetail({ params }: { params: { id: string } }) {
   const [error, setError] = useState<string | null>(null);
   const [isSaved, setIsSaved] = useState(false);
   const [hasApplied, setHasApplied] = useState(false);
-  const [applicationStatus, setApplicationStatus] = useState<string | null>(null);
+  const [applicationStatus, setApplicationStatus] = useState<'PENDING' | 'ACCEPTED' | 'REJECTED' | null>(null);
   const [isApplying, setIsApplying] = useState(false);
   const [applications, setApplications] = useState<Application[]>([]);
   const [isUpdatingStatus, setIsUpdatingStatus] = useState(false);
@@ -55,8 +56,8 @@ export default function JobDetail({ params }: { params: { id: string } }) {
         }
         const data = await response.json();
         setJob(data);
-      } catch (error: any) {
-        setError(error.message);
+      } catch (error) {
+        setError(handleError(error));
       } finally {
         setLoading(false);
       }
@@ -122,8 +123,8 @@ export default function JobDetail({ params }: { params: { id: string } }) {
       }
 
       setIsSaved(!isSaved);
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error) {
+      setError(handleError(error));
     }
   };
 
@@ -141,14 +142,14 @@ export default function JobDetail({ params }: { params: { id: string } }) {
 
       setHasApplied(true);
       setApplicationStatus('PENDING');
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error) {
+      setError(handleError(error));
     } finally {
       setIsApplying(false);
     }
   };
 
-  const handleUpdateStatus = async (applicationId: string, newStatus: string) => {
+  const handleUpdateStatus = async (applicationId: string, newStatus: Application['status']) => {
     try {
       setIsUpdatingStatus(true);
       const response = await fetch(`/api/jobs/${jobId}/applications`, {
@@ -166,12 +167,11 @@ export default function JobDetail({ params }: { params: { id: string } }) {
         throw new Error('Failed to update application status');
       }
 
-      // Update the applications list with the new status
       setApplications(applications.map(app => 
-        app.id === applicationId ? { ...app, status: newStatus as 'PENDING' | 'ACCEPTED' | 'REJECTED' } : app
+        app.id === applicationId ? { ...app, status: newStatus } : app
       ));
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error) {
+      setError(handleError(error));
     } finally {
       setIsUpdatingStatus(false);
     }
@@ -310,7 +310,7 @@ export default function JobDetail({ params }: { params: { id: string } }) {
                         <div className="flex items-center space-x-2">
                           <select
                             value={application.status}
-                            onChange={(e) => handleUpdateStatus(application.id, e.target.value)}
+                            onChange={(e) => handleUpdateStatus(application.id, e.target.value as 'PENDING' | 'ACCEPTED' | 'REJECTED')}
                             disabled={isUpdatingStatus}
                             className="block w-32 rounded-md border-gray-300 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 sm:text-sm"
                           >

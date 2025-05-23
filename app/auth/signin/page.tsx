@@ -6,14 +6,19 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useState } from 'react';
 import Link from 'next/link';
 
+interface SignInFormData {
+  email: string;
+  password: string;
+}
+
 export default function SignIn() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const { register, handleSubmit, formState: { errors } } = useForm();
+  const { register, handleSubmit, formState: { errors } } = useForm<SignInFormData>();
 
-  const onSubmit = async (data: any) => {
+  const onSubmit = async (data: SignInFormData) => {
     try {
       setIsLoading(true);
       const result = await signIn('credentials', {
@@ -30,6 +35,7 @@ export default function SignIn() {
       const from = searchParams.get('from') || '/dashboard';
       router.push(from);
     } catch (error) {
+      console.error('Sign in error:', error);
       setError('Something went wrong');
     } finally {
       setIsLoading(false);

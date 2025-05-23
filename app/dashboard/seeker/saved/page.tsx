@@ -2,13 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
+import { handleError } from '@/utils/error';
 
 interface Job {
   id: string;
   title: string;
   company: string;
   location: string;
-  type: string;
+  type: 'FULL_TIME' | 'PART_TIME' | 'CONTRACT' | 'INTERNSHIP';
   createdAt: string;
 }
 
@@ -26,8 +27,8 @@ export default function SavedJobs() {
         }
         const data = await response.json();
         setJobs(data);
-      } catch (error: any) {
-        setError(error.message);
+      } catch (error) {
+        setError(handleError(error));
       } finally {
         setLoading(false);
       }
@@ -35,6 +36,12 @@ export default function SavedJobs() {
 
     fetchSavedJobs();
   }, []);
+
+  const formatJobType = (type: Job['type']): string => {
+    return type.split('_').map(word => 
+      word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()
+    ).join(' ');
+  };
 
   if (loading) {
     return (
@@ -107,7 +114,7 @@ export default function SavedJobs() {
                   </div>
                   <div className="ml-4 flex-shrink-0">
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {job.type}
+                      {formatJobType(job.type)}
                     </span>
                   </div>
                 </div>

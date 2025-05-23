@@ -5,12 +5,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useRouter } from 'next/navigation';
 import { useState } from 'react';
+import { handleError } from '@/utils/error';
 
 const jobSchema = z.object({
   title: z.string().min(1, 'Title is required'),
   company: z.string().min(1, 'Company name is required'),
   location: z.string().min(1, 'Location is required'),
-  type: z.string().min(1, 'Job type is required'),
+  type: z.enum(['FULL_TIME', 'PART_TIME', 'CONTRACT', 'INTERNSHIP'], {
+    errorMap: () => ({ message: 'Please select a valid job type' })
+  }),
   description: z.string().min(10, 'Description must be at least 10 characters'),
   salary: z.string().optional(),
 });
@@ -42,13 +45,13 @@ export default function PostJob() {
       });
 
       if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message);
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to post job');
       }
 
       router.push('/dashboard/jobs');
-    } catch (error: any) {
-      setError(error.message);
+    } catch (error) {
+      setError(handleError(error));
     } finally {
       setIsSubmitting(false);
     }
